@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Bicicletero</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+<!-- Header con Imagen de Fondo -->
+        <div class="relative bg-slate-900 text-white p-6 md:p-8 rounded-2xl shadow-md overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-800">
+            
+            <!-- Imagen de Fondo con Capa Oscura (Overlay) -->
+            <img src="https://lh3.googleusercontent.com/d/151HhX6gcxvtE4dzwe85jWwHmwhkQRv3h=s1600" 
+                 alt="Edificio Concepto Style Ñuñoa" 
+                 class="absolute inset-0 w-full h-full object-cover opacity-30">
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/80 to-slate-950/60"></div>
+
+            <!-- Contenido Frontal -->
+            <div class="relative z-10">
+                <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-3 drop-shadow-md">
+                    <i class="fa-solid fa-parking text-blue-400"></i> Control de Bicicleteros
+                </h1>
+                <p class="text-slate-300 text-sm mt-1 drop-shadow-md">Edificio Concepto Style Ñuñoa.</p>
+            </div>
+
+            <!-- Contadores sobre el fondo -->
+            <div class="relative z-10 flex gap-3 text-sm">
+                <div class="bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-700/70 shadow-md">
+                    <span class="text-slate-400 block text-xs">Total Espacios</span>
+                    <strong id="totalCount" class="text-lg text-white">0</strong>
+                </div>
+                <div class="bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-700/70 shadow-md">
+                    <span class="text-slate-400 block text-xs">Ocupados</span>
+                    <strong id="occupiedCount" class="text-lg text-emerald-400">0</strong>
+                </div>
+                <div class="bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-700/70 shadow-md">
+                    <span class="text-slate-400 block text-xs">Disponibles</span>
+                    <strong id="availableCount" class="text-lg text-amber-400">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros y Buscador -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="search" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Buscar</label>
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="search" onkeyup="filterCards()" placeholder="Buscar por N°, Nombre, Dpto, Marca..." 
+                           class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+            </div>
+            <div>
+                <label for="zoneFilter" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Zona / Ubicación</label>
+                <select id="zoneFilter" onchange="filterCards()" class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm bg-white">
+                    <option value="">Todas las zonas</option>
+                    <option value="ACCESO VEHICULAR">Acceso Vehicular</option>
+                    <option value="ACCESO PEATONAL">Acceso Peatonal</option>
+                    <option value="PASILLO TORRE A (-1)">Pasillo Torre A (-1)</option>
+                    <option value="PASILLO TORRE A (-2)">Pasillo Torre A (-2)</option>
+                </select>
+            </div>
+            <div>
+                <label for="statusFilter" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Estado de Ocupación</label>
+                <select id="statusFilter" onchange="filterCards()" class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm bg-white">
+                    <option value="">Todos los estados</option>
+                    <option value="OCUPADO">Ocupado (TRUE)</option>
+                    <option value="DISPONIBLE">Disponible (FALSE)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Grid de Tarjetas -->
+        <div id="cardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <!-- Renderizado dinámico -->
+        </div>
+
+    </div>
+
+    <script>
+        const rawData = [
+            { id: "1", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "2", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "3", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "4", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "5", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "6", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "7", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "8", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "9", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "10", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "11", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "12", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "13", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "14", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "15", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "16", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "17", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "18", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "19", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "20", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "21", zona: "ACCESO VEHICULAR", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "", driveUrl: "", thumbUrl: "" },
+            { id: "22", zona: "ACCESO PEATONAL", dpto: "420", nombre: "PABLO SILVA", marca: "OXFORD 29", color: "AZUL", estado: true, imagen: "22.jpeg", driveUrl: "https://drive.google.com/open?id=1JtmQvnRpUOUYjW8CVyzBIn0-E4Zg98it", thumbUrl: "https://drive.google.com/thumbnail?id=1JtmQvnRpUOUYjW8CVyzBIn0-E4Zg98it&sz=w800" },
+            { id: "23", zona: "ACCESO PEATONAL", dpto: "620", nombre: "YENNY LOPEZ", marca: "AVALANCE BIANCI", color: "GRIS", estado: true, imagen: "23.jpeg", driveUrl: "https://drive.google.com/open?id=1YXgWluN9c0ACbWKgb5zgk-w7JfLXKu5f", thumbUrl: "https://drive.google.com/thumbnail?id=1YXgWluN9c0ACbWKgb5zgk-w7JfLXKu5f&sz=w800" },
+            { id: "24", zona: "ACCESO PEATONAL", dpto: "715", nombre: "MELISSA GONZALEZ", marca: "TREEK", color: "PLATEADA", estado: true, imagen: "24.jpeg", driveUrl: "https://drive.google.com/open?id=1PLs0NFh_JjmcC3w65EDOAuqRsyDGqAw_", thumbUrl: "https://drive.google.com/thumbnail?id=1PLs0NFh_JjmcC3w65EDOAuqRsyDGqAw_&sz=w800" },
+            { id: "25", zona: "ACCESO PEATONAL", dpto: "709", nombre: "DIEGO PINTO", marca: "TREEK", color: "NEGRA", estado: true, imagen: "25.jpeg", driveUrl: "https://drive.google.com/open?id=1vOm9lsDh-gBK1JRwrTLbZiH4oVylf55c", thumbUrl: "https://drive.google.com/thumbnail?id=1vOm9lsDh-gBK1JRwrTLbZiH4oVylf55c&sz=w800" },
+            { id: "26", zona: "ACCESO PEATONAL", dpto: "203", nombre: "NICOLAS CHOMALI", marca: "CROSSBIKE", color: "VERDE", estado: true, imagen: "26.jpeg", driveUrl: "https://drive.google.com/open?id=16Cofl-dmm8k4NB1Ll3--AvAWkjfd9FPd", thumbUrl: "https://drive.google.com/thumbnail?id=16Cofl-dmm8k4NB1Ll3--AvAWkjfd9FPd&sz=w800" },
+            { id: "27", zona: "ACCESO PEATONAL", dpto: "301", nombre: "FRANCISCO TAPIA", marca: "TREK", color: "GRIS GRAFITO CON LETRAS ROJAS", estado: true, imagen: "27.jpeg", driveUrl: "https://drive.google.com/open?id=1WLLzvs1yrqrfFdYyWAj3V2WR8lhxytwo", thumbUrl: "https://drive.google.com/thumbnail?id=1WLLzvs1yrqrfFdYyWAj3V2WR8lhxytwo&sz=w800" },
+            { id: "28", zona: "ACCESO PEATONAL", dpto: "704", nombre: "VIVIANA PEREZ", marca: "TREK", color: "GRIS", estado: true, imagen: "28.jpeg", driveUrl: "https://drive.google.com/open?id=1kJJ0IojuRGQsRL6p8QnaIHRi1CBt5q5s", thumbUrl: "https://drive.google.com/thumbnail?id=1kJJ0IojuRGQsRL6p8QnaIHRi1CBt5q5s&sz=w800" },
+            { id: "29", zona: "ACCESO PEATONAL", dpto: "215", nombre: "TOMAS ROJAS", marca: "FELT", color: "ROJO", estado: true, imagen: "29.jpeg", driveUrl: "https://drive.google.com/open?id=1WjDW_LbE_2D7fYRK-LFK150tlZBEef76", thumbUrl: "https://drive.google.com/thumbnail?id=1WjDW_LbE_2D7fYRK-LFK150tlZBEef76&sz=w800" },
+            { id: "30", zona: "ACCESO PEATONAL", dpto: "406", nombre: "NATALIA PERALTA", marca: "TREEK", color: "GRIS/VERDE", estado: true, imagen: "30.jpeg", driveUrl: "https://drive.google.com/open?id=1OCXHPHw9yvmj3cKQAjvZyYr5Eo_GiDRF", thumbUrl: "https://drive.google.com/thumbnail?id=1OCXHPHw9yvmj3cKQAjvZyYr5Eo_GiDRF&sz=w800" },
+            { id: "31", zona: "ACCESO PEATONAL", dpto: "603", nombre: "CAROL LABBE", marca: "TREEK", color: "GRIS", estado: true, imagen: "31.jpeg", driveUrl: "https://drive.google.com/open?id=1zYsJsYnh6wMIJ8R45e3qc0w1BoABjOMX", thumbUrl: "https://drive.google.com/thumbnail?id=1zYsJsYnh6wMIJ8R45e3qc0w1BoABjOMX&sz=w800" },
+            { id: "32", zona: "ACCESO PEATONAL", dpto: "508", nombre: "BENJAMIN RUIZ-TAGLE", marca: "TREEK", color: "GRIS", estado: true, imagen: "32.jpeg", driveUrl: "https://drive.google.com/open?id=1YxBwu8N1SWGWHJdXf7KQ9Ee9Ek-4MQ7-", thumbUrl: "https://drive.google.com/thumbnail?id=1YxBwu8N1SWGWHJdXf7KQ9Ee9Ek-4MQ7-&sz=w800" },
+            { id: "33", zona: "ACCESO PEATONAL", dpto: "711", nombre: "JOAQUIN MAYNE", marca: "TREEK", color: "GRIS", estado: true, imagen: "33.jpeg", driveUrl: "https://drive.google.com/open?id=17LcSyeISw9aGdd1o6eCg6_el3F9sdEDk", thumbUrl: "https://drive.google.com/thumbnail?id=17LcSyeISw9aGdd1o6eCg6_el3F9sdEDk&sz=w800" },
+            { id: "34", zona: "ACCESO PEATONAL", dpto: "519", nombre: "ROXANY LOMBANA", marca: "BIANCHI", color: "GRIS", estado: true, imagen: "34.jpeg", driveUrl: "https://drive.google.com/open?id=164ErnRJR5igBrUJpcLak-WsmeYG2FxOa", thumbUrl: "https://drive.google.com/thumbnail?id=164ErnRJR5igBrUJpcLak-WsmeYG2FxOa&sz=w800" },
+            { id: "35", zona: "ACCESO PEATONAL", dpto: "501", nombre: "MARIA VEITIA", marca: "RALEIGH", color: "VERDE/FOSFORESCENTE", estado: true, imagen: "35.jpeg", driveUrl: "https://drive.google.com/open?id=18CPEZZfMUbGfe9DzS5OozpD-0KF57nPD", thumbUrl: "https://drive.google.com/thumbnail?id=18CPEZZfMUbGfe9DzS5OozpD-0KF57nPD&sz=w800" },
+            { id: "35.B", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "35-B.jpeg", driveUrl: "https://drive.google.com/open?id=1jFDY8EqYmUjXSYBHegO5TY8ljFWcdBNJ", thumbUrl: "https://drive.google.com/thumbnail?id=1jFDY8EqYmUjXSYBHegO5TY8ljFWcdBNJ&sz=w800" },
+            { id: "36", zona: "PASILLO TORRE A (-1)", dpto: "103", nombre: "LESLIE PEREZ", marca: "GT/LAGUNA", color: "NEGRO/ MORADO", estado: true, imagen: "36.jpeg", driveUrl: "https://drive.google.com/open?id=1OgduROuef_YdVlMNMv4WwicBEZNpWECw", thumbUrl: "https://drive.google.com/thumbnail?id=1OgduROuef_YdVlMNMv4WwicBEZNpWECw&sz=w800" },
+            { id: "37", zona: "PASILLO TORRE A (-1)", dpto: "616", nombre: "NATALIA FARIAS", marca: "OXFORD", color: "BLANCA/VERDE", estado: true, imagen: "37.jpeg", driveUrl: "https://drive.google.com/open?id=1xTi4lEnWymdIDNYccO9-xXy3Ux95pvuf", thumbUrl: "https://drive.google.com/thumbnail?id=1xTi4lEnWymdIDNYccO9-xXy3Ux95pvuf&sz=w800" },
+            { id: "38", zona: "PASILLO TORRE A (-1)", dpto: "305", nombre: "RAYEN SAN MARTIN", marca: "OXFORD", color: "TURQUESA", estado: true, imagen: "38.jpeg", driveUrl: "https://drive.google.com/open?id=1bk_Bf8PpDt6vqA2oNSvB9VBZuAw9NAlW", thumbUrl: "https://drive.google.com/thumbnail?id=1bk_Bf8PpDt6vqA2oNSvB9VBZuAw9NAlW&sz=w800" },
+            { id: "39", zona: "PASILLO TORRE A (-1)", dpto: "716", nombre: "MARÍA JOSÉ PALACIOS", marca: "UNLAND", color: "CALIPSO", estado: true, imagen: "39.jpeg", driveUrl: "https://drive.google.com/open?id=1-1SivIzlV1_95cFAx5YiWhJhMTEcmOpX", thumbUrl: "https://drive.google.com/thumbnail?id=1-1SivIzlV1_95cFAx5YiWhJhMTEcmOpX&sz=w800" },
+            { id: "40", zona: "PASILLO TORRE A (-1)", dpto: "707", nombre: "MICHAEL FIGUEROA", marca: "TREEK MARLIN 7", color: "AZUL MARINO", estado: true, imagen: "40.jpeg", driveUrl: "https://drive.google.com/open?id=15UOoq2n_DEnd12gr-KGhOvOxd7_qTVmC", thumbUrl: "https://drive.google.com/thumbnail?id=15UOoq2n_DEnd12gr-KGhOvOxd7_qTVmC&sz=w800" },
+            { id: "41", zona: "PASILLO TORRE A (-1)", dpto: "104", nombre: "MARCELO FOUCAUT", marca: "JEEP", color: "BLANCA", estado: true, imagen: "41.jpeg", driveUrl: "https://drive.google.com/open?id=1kZNrgi8jovDKtaJ4FpG0dNiuieDyNRQ3", thumbUrl: "https://drive.google.com/thumbnail?id=1kZNrgi8jovDKtaJ4FpG0dNiuieDyNRQ3&sz=w800" },
+            { id: "42", zona: "PASILLO TORRE A (-1)", dpto: "515", nombre: "IVAN SARPI", marca: "KONA", color: "GRIS", estado: true, imagen: "42.jpeg", driveUrl: "https://drive.google.com/open?id=1tCFTV5VDSuXwg7e_Ln791tNLe45f2hWO", thumbUrl: "https://drive.google.com/thumbnail?id=1tCFTV5VDSuXwg7e_Ln791tNLe45f2hWO&sz=w800" },
+            { id: "43", zona: "PASILLO TORRE A (-1)", dpto: "306", nombre: "CRISTIÁN ARAVENA", marca: "TREL", color: "NARANJA", estado: true, imagen: "43.jpeg", driveUrl: "https://drive.google.com/open?id=1ByBToS04taHilCdOtHZXRoK3xRi-x6Vk", thumbUrl: "https://drive.google.com/thumbnail?id=1ByBToS04taHilCdOtHZXRoK3xRi-x6Vk&sz=w800" },
+            { id: "44", zona: "PASILLO TORRE A (-1)", dpto: "318", nombre: "ADRIAN MORALES", marca: "JEEP", color: "NEGRA", estado: true, imagen: "44.jpeg", driveUrl: "https://drive.google.com/open?id=1_vod4VuMZy8N35Sa1oOangWREO5WR8Yi", thumbUrl: "https://drive.google.com/thumbnail?id=1_vod4VuMZy8N35Sa1oOangWREO5WR8Yi&sz=w800" },
+            { id: "45", zona: "PASILLO TORRE A (-1)", dpto: "610", nombre: "LAURA BARTOLOTTI", marca: "OXFORD", color: "NEGRA", estado: true, imagen: "45.jpeg", driveUrl: "https://drive.google.com/open?id=1jnp730NVjm1X8FrHb594ec8obL0ANTNB", thumbUrl: "https://drive.google.com/thumbnail?id=1jnp730NVjm1X8FrHb594ec8obL0ANTNB&sz=w800" },
+            { id: "46", zona: "PASILLO TORRE A (-1)", dpto: "513", nombre: "Andrea Escoffier", marca: "TRINX/KRAKKEN AFRODITA", color: "GRIS/GRAFITO/METALICO", estado: true, imagen: "46.jpeg", driveUrl: "https://drive.google.com/open?id=1rq41zlgwiVXHV95xLAX8FdJgm7Bo2Ybo", thumbUrl: "https://drive.google.com/thumbnail?id=1rq41zlgwiVXHV95xLAX8FdJgm7Bo2Ybo&sz=w800" },
+            { id: "47", zona: "PASILLO TORRE A (-1)", dpto: "510", nombre: "CARLOS BELMAR", marca: "TREK", color: "NEGRA", estado: true, imagen: "47.jpeg", driveUrl: "https://drive.google.com/open?id=135FPs8BBIp9f1ndtofsFxk5ntvBWMUDI", thumbUrl: "https://drive.google.com/thumbnail?id=135FPs8BBIp9f1ndtofsFxk5ntvBWMUDI&sz=w800" },
+            { id: "48", zona: "PASILLO TORRE A (-1)", dpto: "502", nombre: "GIANCARLO MUSSATO", marca: "TREEK MARLIN 5", color: "PLOMA", estado: true, imagen: "48.jpeg", driveUrl: "https://drive.google.com/open?id=1jd9EAXIDsZA7UYhAtZE_MpI_it99wJmU", thumbUrl: "https://drive.google.com/thumbnail?id=1jd9EAXIDsZA7UYhAtZE_MpI_it99wJmU&sz=w800" },
+            { id: "49", zona: "PASILLO TORRE A (-1)", dpto: "514", nombre: "BRAULIO ALIAGA", marca: "BIANCHI/CON SILLA DE NIÑO", color: "CALIPSO", estado: true, imagen: "49.jpeg", driveUrl: "https://drive.google.com/open?id=1C6vtAcC5cTirNJr9Hf-TkVEGVh36WLmU", thumbUrl: "https://drive.google.com/thumbnail?id=1C6vtAcC5cTirNJr9Hf-TkVEGVh36WLmU&sz=w800" },
+            { id: "50", zona: "PASILLO TORRE A (-1)", dpto: "312", nombre: "KARLA PÉREZ", marca: "S/MARCA", color: "NEGRA", estado: true, imagen: "50.jpeg", driveUrl: "https://drive.google.com/open?id=1YBSUpIblwtnXaj44Cu8ZdBg95fIBE7Bz", thumbUrl: "https://drive.google.com/thumbnail?id=1YBSUpIblwtnXaj44Cu8ZdBg95fIBE7Bz&sz=w800" },
+            { id: "51", zona: "PASILLO TORRE A (-1)", dpto: "608", nombre: "LEANDRO CAMPILLAY", marca: "P3/CYCLE", color: "NEGRA/NARANJO", estado: true, imagen: "51.jpeg", driveUrl: "https://drive.google.com/open?id=1w0JQilxP16ITd9o00Le2_S0iZltUqWjV", thumbUrl: "https://drive.google.com/thumbnail?id=1w0JQilxP16ITd9o00Le2_S0iZltUqWjV&sz=w800" },
+            { id: "52", zona: "PASILLO TORRE A (-1)", dpto: "408", nombre: "DAVID AHUMADA", marca: "TREK CROSS", color: "NEGRA", estado: true, imagen: "52.jpeg", driveUrl: "https://drive.google.com/open?id=1UO3C4OenuOZE0Krk_s5n8J39j8Y1refi", thumbUrl: "https://drive.google.com/thumbnail?id=1UO3C4OenuOZE0Krk_s5n8J39j8Y1refi&sz=w800" },
+            { id: "53", zona: "PASILLO TORRE A (-1)", dpto: "403", nombre: "JAVIERA CASTILLO", marca: "TREK/MARLIN 5", color: "VERDE", estado: true, imagen: "53.jpeg", driveUrl: "https://drive.google.com/open?id=1xif2sqpgXQh3yMvCJKBWzhM1kWbmRtjs", thumbUrl: "https://drive.google.com/thumbnail?id=1xif2sqpgXQh3yMvCJKBWzhM1kWbmRtjs&sz=w800" },
+            { id: "54", zona: "PASILLO TORRE A (-1)", dpto: "505", nombre: "LILIA FUENTEALBA", marca: "VIRTUE", color: "NEGRO", estado: true, imagen: "54.jpeg", driveUrl: "https://drive.google.com/open?id=1chMuUeIJtGMbyynyNf9wZtLfmHgJyv8J", thumbUrl: "https://drive.google.com/thumbnail?id=1chMuUeIJtGMbyynyNf9wZtLfmHgJyv8J&sz=w800" },
+            { id: "55", zona: "PASILLO TORRE A (-1)", dpto: "708", nombre: "THALIA SANCHEZ", marca: "BIANCHI", color: "GRIS/NEGRO/ROJO", estado: true, imagen: "55.jpeg", driveUrl: "https://drive.google.com/open?id=1jPg9XQDJjA7b5iuLsC-tFSX6HLw2K_mI", thumbUrl: "https://drive.google.com/thumbnail?id=1jPg9XQDJjA7b5iuLsC-tFSX6HLw2K_mI&sz=w800" },
+            { id: "56", zona: "PASILLO TORRE A (-1)", dpto: "320", nombre: "ALBA ACUÑA", marca: "TREK", color: "GRIS/LETRAS ROJAS", estado: true, imagen: "56.jpeg", driveUrl: "https://drive.google.com/open?id=1KCvYDEmZbkgMRRgXM8XvToSbHNy28igJ", thumbUrl: "https://drive.google.com/thumbnail?id=1KCvYDEmZbkgMRRgXM8XvToSbHNy28igJ&sz=w800" },
+            { id: "57", zona: "PASILLO TORRE A (-1)", dpto: "704", nombre: "VIVIANA PEREZ", marca: "TREK X-CALIBER 8", color: "GRIS", estado: true, imagen: "57.jpeg", driveUrl: "https://drive.google.com/open?id=1rI0o8X8fBhT5Xfr3PbeTCGJBISLkxPVF", thumbUrl: "https://drive.google.com/thumbnail?id=1rI0o8X8fBhT5Xfr3PbeTCGJBISLkxPVF&sz=w800" },
+            { id: "58", zona: "PASILLO TORRE A (-1)", dpto: "216", nombre: "Jaime Saldias", marca: "oxford", color: "negra", estado: true, imagen: "58.jpeg", driveUrl: "https://drive.google.com/open?id=1dKWjPi1_EMipnsFz_3qRb9bUfSLYD9pT", thumbUrl: "https://drive.google.com/thumbnail?id=1dKWjPi1_EMipnsFz_3qRb9bUfSLYD9pT&sz=w800" },
+            { id: "59", zona: "PASILLO TORRE A (-1)", dpto: "204", nombre: "FELIPE ARRIAGADA", marca: "OXIGEN", color: "NEGRO", estado: true, imagen: "59.jpeg", driveUrl: "https://drive.google.com/open?id=1WPtOv8oi2a0PMC-GCKwP4uwsjZzlznPd", thumbUrl: "https://drive.google.com/thumbnail?id=1WPtOv8oi2a0PMC-GCKwP4uwsjZzlznPd&sz=w800" },
+            { id: "60", zona: "PASILLO TORRE A (-1)", dpto: "207", nombre: "EDUARDO ESCOBAR", marca: "GIANT", color: "VERDE-NEGRO", estado: true, imagen: "60.jpeg", driveUrl: "https://drive.google.com/open?id=15KLnwPsmDsmycYVBdJDjxU958pIx1V0W", thumbUrl: "https://drive.google.com/thumbnail?id=15KLnwPsmDsmycYVBdJDjxU958pIx1V0W&sz=w800" },
+            { id: "61", zona: "PASILLO TORRE A (-1)", dpto: "418", nombre: "HERNAN GOMEZ", marca: "TREEK 3700", color: "AZUL", estado: true, imagen: "61.jpeg", driveUrl: "https://drive.google.com/open?id=1s9NAIo6PYdDcomm3ybYZhr-CadObLAJc", thumbUrl: "https://drive.google.com/thumbnail?id=1s9NAIo6PYdDcomm3ybYZhr-CadObLAJc&sz=w800" },
+            { id: "62", zona: "PASILLO TORRE A (-1)", dpto: "506", nombre: "FELIPE RODRIGUEZ", marca: "GIANT", color: "GRIS", estado: true, imagen: "62.jpeg", driveUrl: "https://drive.google.com/open?id=1qqJecEXblPUJrV28D_GyIZZ-Ylg7IGpK", thumbUrl: "https://drive.google.com/thumbnail?id=1qqJecEXblPUJrV28D_GyIZZ-Ylg7IGpK&sz=w800" },
+            { id: "63", zona: "PASILLO TORRE A (-1)", dpto: "410", nombre: "CAROLINA PARDO", marca: "TREK", color: "NEGRO", estado: true, imagen: "63.jpeg", driveUrl: "https://drive.google.com/open?id=1w2bYLa8kfEPiW4XwGIVUy7TTjsdTdOCv", thumbUrl: "https://drive.google.com/thumbnail?id=1w2bYLa8kfEPiW4XwGIVUy7TTjsdTdOCv&sz=w800" },
+            { id: "64", zona: "PASILLO TORRE A (-1)", dpto: "505", nombre: "LILIA FUENTEALBA", marca: "", color: "", estado: true, imagen: "64.jpeg", driveUrl: "https://drive.google.com/open?id=1cYtkCe57kXW_N9rdt5qdz6GEkLjuc0Tw", thumbUrl: "https://drive.google.com/thumbnail?id=1cYtkCe57kXW_N9rdt5qdz6GEkLjuc0Tw&sz=w800" },
+            { id: "65", zona: "PASILLO TORRE A (-1)", dpto: "713", nombre: "LISSETTE OVALLES", marca: "", color: "", estado: true, imagen: "65.jpeg", driveUrl: "https://drive.google.com/open?id=1zt8AnDAhka5YMW3_l4_D6bGxLWrCjt7y", thumbUrl: "https://drive.google.com/thumbnail?id=1zt8AnDAhka5YMW3_l4_D6bGxLWrCjt7y&sz=w800" },
+            { id: "66", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "66.jpeg", driveUrl: "https://drive.google.com/open?id=1gC9RhOePU7YpDppCGeYob3iuRpbe6bbo", thumbUrl: "https://drive.google.com/thumbnail?id=1gC9RhOePU7YpDppCGeYob3iuRpbe6bbo&sz=w800" },
+            { id: "67", zona: "PASILLO TORRE A (-1)", dpto: "517", nombre: "FRANCHESCA CONTRERAS", marca: "FIERCE", color: "NEGRO/AZUL", estado: true, imagen: "67.jpeg", driveUrl: "https://drive.google.com/open?id=1G2x0Jw7NCvGp6LNSknJl6nEvQ2YGcxbt", thumbUrl: "https://drive.google.com/thumbnail?id=1G2x0Jw7NCvGp6LNSknJl6nEvQ2YGcxbt&sz=w800" },
+            { id: "68", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "68.jpeg", driveUrl: "https://drive.google.com/open?id=1QTn2m2wLtuj7nlyN_Urrjnoro4NtbmgB", thumbUrl: "https://drive.google.com/thumbnail?id=1QTn2m2wLtuj7nlyN_Urrjnoro4NtbmgB&sz=w800" },
+            { id: "69", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "69.jpeg", driveUrl: "https://drive.google.com/open?id=1e7tlPoJbs2gkMk71TuvwflbOPAJmWVXH", thumbUrl: "https://drive.google.com/thumbnail?id=1e7tlPoJbs2gkMk71TuvwflbOPAJmWVXH&sz=w800" },
+            { id: "70", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "70.jpeg", driveUrl: "https://drive.google.com/open?id=1sfnTNvEM8WNJqh5sQkoszJpq2td-bK6N", thumbUrl: "https://drive.google.com/thumbnail?id=1sfnTNvEM8WNJqh5sQkoszJpq2td-bK6N&sz=w800" },
+            { id: "71", zona: "PASILLO TORRE A (-1)", dpto: "309", nombre: "MARCCELO MUÑOZT", marca: "REEK", color: "AZUL", estado: true, imagen: "71.jpeg", driveUrl: "https://drive.google.com/open?id=1swJ4X_Aec8hyCQAfOlSnL1skEaHvqDFL", thumbUrl: "https://drive.google.com/thumbnail?id=1swJ4X_Aec8hyCQAfOlSnL1skEaHvqDFL&sz=w800" },
+            { id: "72", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "72.jpeg", driveUrl: "https://drive.google.com/open?id=1vJXK0DrEOOfLZ4SfTglzilSN90ZQeUi9", thumbUrl: "https://drive.google.com/thumbnail?id=1vJXK0DrEOOfLZ4SfTglzilSN90ZQeUi9&sz=w800" },
+            { id: "73", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "73.jpeg", driveUrl: "https://drive.google.com/open?id=1a6RU2EHRu5vtqYBWHRLKKD0jKdRTV-yb", thumbUrl: "https://drive.google.com/thumbnail?id=1a6RU2EHRu5vtqYBWHRLKKD0jKdRTV-yb&sz=w800" },
+            { id: "74", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "74.jpeg", driveUrl: "https://drive.google.com/open?id=1wZvZEXvAXRCXTV_HfLBcNhYOYUE41uCj", thumbUrl: "https://drive.google.com/thumbnail?id=1wZvZEXvAXRCXTV_HfLBcNhYOYUE41uCj&sz=w800" },
+            { id: "75", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "75.jpeg", driveUrl: "https://drive.google.com/open?id=1xwQN3WWO9U-MmmwBT4VPFxNR25WNBAyt", thumbUrl: "https://drive.google.com/thumbnail?id=1xwQN3WWO9U-MmmwBT4VPFxNR25WNBAyt&sz=w800" },
+            { id: "76", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "76.jpeg", driveUrl: "https://drive.google.com/open?id=1o_IsE_L63dljjuH54Fr6Fu6Wh1jbpBaF", thumbUrl: "https://drive.google.com/thumbnail?id=1o_IsE_L63dljjuH54Fr6Fu6Wh1jbpBaF&sz=w800" },
+            { id: "77", zona: "PASILLO TORRE A (-1)", dpto: "", nombre: "", marca: "", color: "", estado: false, imagen: "77.jpeg", driveUrl: "https://drive.google.com/open?id=1Zi2z04c_gfrbOJ5AFe-ati26zJeJrHu4", thumbUrl: "https://drive.google.com/thumbnail?id=1Zi2z04c_gfrbOJ5AFe-ati26zJeJrHu4&sz=w800" },
+            { id: "78", zona: "PASILLO TORRE A (-2)", dpto: "506", nombre: "FELIPE RODRIGUEZ", marca: "LIV", color: "NEGRA", estado: true, imagen: "78.jpeg", driveUrl: "https://drive.google.com/open?id=1Xu1Y_vnDb7YO2ZSsiM8wEPtzBSBHx8wI", thumbUrl: "https://drive.google.com/thumbnail?id=1Xu1Y_vnDb7YO2ZSsiM8wEPtzBSBHx8wI&sz=w800" },
+            { id: "79", zona: "PASILLO TORRE A (-2)", dpto: "414", nombre: "DANIELA PRADO", marca: "TREK", color: "NEGRA", estado: true, imagen: "79.jpeg", driveUrl: "https://drive.google.com/open?id=1hItNH8mIFxscbzlm1_ETBDNVvZvNjwis", thumbUrl: "https://drive.google.com/thumbnail?id=1hItNH8mIFxscbzlm1_ETBDNVvZvNjwis&sz=w800" },
+            { id: "80", zona: "PASILLO TORRE A (-2)", dpto: "413", nombre: "DAVE RODRIGUEZ", marca: "BODY GLOVE", color: "ROJA", estado: true, imagen: "80.jpeg", driveUrl: "https://drive.google.com/open?id=1WSk55ZiMsS-Wlky-ZlxZKiKkkcZlkFl8", thumbUrl: "https://drive.google.com/thumbnail?id=1WSk55ZiMsS-Wlky-ZlxZKiKkkcZlkFl8&sz=w800" },
+            { id: "81", zona: "PASILLO TORRE A (-2)", dpto: "411", nombre: "OLIVIA ORTIZ", marca: "TREEK", color: "", estado: false, imagen: "81.jpeg", driveUrl: "https://drive.google.com/open?id=1kfwRFyRsMHwT9gPXCg-FiDnKjw1cM9Q-", thumbUrl: "https://drive.google.com/thumbnail?id=1kfwRFyRsMHwT9gPXCg-FiDnKjw1cM9Q-&sz=w800" }
+        ];
+
+        function renderCards(data) {
+            const container = document.getElementById("cardsGrid");
+            container.innerHTML = "";
+
+            let occupied = 0;
+            let available = 0;
+
+            data.forEach(item => {
+                if (item.estado) occupied++; else available++;
+
+                const card = document.createElement("div");
+                card.className = "bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between";
+
+                const isOccupied = item.estado;
+                const badgeColor = isOccupied ? "bg-emerald-500 text-white" : "bg-amber-500 text-white";
+                const statusText = isOccupied ? "OCUPADO" : "DISPONIBLE";
+
+                // Imagen de tarjeta
+                let imageBlock = "";
+                if (item.driveUrl) {
+                    imageBlock = `
+                        <div class="relative h-44 bg-slate-900 group overflow-hidden">
+                            <img src="${item.thumbUrl}" alt="Espacio ${item.id}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full bg-slate-800 text-slate-400 text-xs p-4 text-center\\'>Ver imagen en Google Drive</div>'">
+                            <a href="${item.driveUrl}" target="_blank" class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-slate-800 hover:bg-white text-xs px-3 py-1.5 rounded-lg shadow font-medium flex items-center gap-1.5">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-blue-600"></i> Abrir Foto
+                            </a>
+                        </div>
+                    `;
+                } else if (item.imagen) {
+                    imageBlock = `
+                        <div class="h-24 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-3 text-slate-400 text-xs">
+                            <i class="fa-regular fa-image text-lg mr-2"></i> Imagen asignada: <strong class="ml-1 text-slate-600">${item.imagen}</strong>
+                        </div>
+                    `;
+                } else {
+                    imageBlock = `
+                        <div class="h-16 bg-slate-50/50 border-b border-slate-100 flex items-center justify-center text-slate-300 text-xs">
+                            <i class="fa-solid fa-camera text-slate-300 mr-2"></i> Sin imagen adjunta
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Header de Tarjeta -->
+                        <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                            <div>
+                                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Espacio</span>
+                                <h3 class="text-xl font-bold text-slate-800">N° ${item.id}</h3>
+                            </div>
+                            <span class="px-2.5 py-1 text-xs font-extrabold rounded-full ${badgeColor}">
+                                ${statusText}
+                            </span>
+                        </div>
+
+                        <!-- Imagen -->
+                        ${imageBlock}
+
+                        <!-- Info Body -->
+                        <div class="p-4 space-y-3 text-sm">
+                            <div class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md inline-block">
+                                <i class="fa-solid fa-location-dot mr-1"></i> ${item.zona}
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                                <div>
+                                    <span class="text-xs text-slate-400 block">Departamento:</span>
+                                    <span class="${item.dpto ? 'font-bold text-slate-800' : 'text-slate-300 font-light'}">${item.dpto || 'Sin asignar'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-slate-400 block">Residente:</span>
+                                    <span class="${item.nombre ? 'font-medium text-slate-700' : 'text-slate-300 font-light'}">${item.nombre || 'Vacío'}</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+                                <div>
+                                    <span class="text-slate-400 block">Marca / Modelo:</span>
+                                    <span class="${item.marca ? 'text-slate-700 font-medium' : 'text-slate-300'}">${item.marca || '-'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block">Color:</span>
+                                    <span class="${item.color ? 'text-slate-700 font-medium' : 'text-slate-300'}">${item.color || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Enlace Directo (si aplica) -->
+                    ${item.driveUrl ? `
+                        <div class="p-3 bg-slate-50 border-t border-slate-100 text-center">
+                            <a href="${item.driveUrl}" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1">
+                                <i class="fa-brands fa-google-drive"></i> Ver archivo en Google Drive
+                            </a>
+                        </div>
+                    ` : ''}
+                `;
+
+                container.appendChild(card);
+            });
+
+            document.getElementById("totalCount").innerText = data.length;
+            document.getElementById("occupiedCount").innerText = occupied;
+            document.getElementById("availableCount").innerText = available;
+        }
+
+        function filterCards() {
+            const searchValue = document.getElementById("search").value.toLowerCase();
+            const zoneValue = document.getElementById("zoneFilter").value;
+            const statusValue = document.getElementById("statusFilter").value;
+
+            const filtered = rawData.filter(item => {
+                const matchesSearch = 
+                    item.id.toLowerCase().includes(searchValue) ||
+                    item.dpto.toLowerCase().includes(searchValue) ||
+                    item.nombre.toLowerCase().includes(searchValue) ||
+                    item.marca.toLowerCase().includes(searchValue) ||
+                    item.color.toLowerCase().includes(searchValue);
+
+                const matchesZone = zoneValue === "" || item.zona === zoneValue;
+                const statusText = item.estado ? "OCUPADO" : "DISPONIBLE";
+                const matchesStatus = statusValue === "" || statusText === statusValue;
+
+                return matchesSearch && matchesZone && matchesStatus;
+            });
+
+            renderCards(filtered);
+        }
+
+        // Carga inicial
+        renderCards(rawData);
+    </script>
+</body>
+</html>
